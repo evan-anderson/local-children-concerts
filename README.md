@@ -66,9 +66,12 @@ uv run python main.py
 ```
 
 This will:
-1. Scrape concert data from configured sources
-2. Filter for child-friendly events
-3. Save results to `data/concerts.json` and `data/concerts.csv`
+1. Generate mock concert data (no API key required)
+2. Optionally scrape from Eventbrite (if API key is set)
+3. Filter for child-friendly events
+4. Save results to `data/concerts.json` and `data/concerts.csv`
+
+**Note**: The scraper works out of the box with mock data - no API keys needed to get started!
 
 ### Configuring Eventbrite Scraper
 
@@ -81,6 +84,22 @@ The Eventbrite scraper requires an API key:
 export EVENTBRITE_API_KEY='your_api_key_here'
 ```
 
+### Running Tests
+
+Run the test suite to verify everything works:
+
+```bash
+uv run pytest
+```
+
+For verbose output with coverage:
+
+```bash
+uv run pytest -v --cov=scraper
+```
+
+All tests should pass without requiring any API keys.
+
 ### Configuration
 
 Edit [scraper/config.py](scraper/config.py) to customize:
@@ -92,7 +111,8 @@ Edit [scraper/config.py](scraper/config.py) to customize:
 ## Data Sources
 
 ### Currently Implemented
-- **Eventbrite**: Uses the Eventbrite API to search for family-friendly concerts
+- **Mock Data**: Sample concert data for testing (no API key needed)
+- **Eventbrite**: Uses the Eventbrite API to search for family-friendly concerts (optional, requires API key)
 
 ### Planned Sources
 The project is designed to be extensible. Additional scrapers can be implemented for:

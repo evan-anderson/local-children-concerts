@@ -1,9 +1,11 @@
 """Main script to run concert scrapers and generate data files."""
 
 import logging
+import os
 
 from scraper.config import BOSTON_METRO_TOWNS, CHILD_FRIENDLY_KEYWORDS, CONCERTS_CSV, CONCERTS_JSON
 from scraper.eventbrite_scraper import EventbriteScraper
+from scraper.mock_scraper import MockDataScraper
 
 logging.basicConfig(
     level=logging.INFO,
@@ -19,12 +21,24 @@ def main():
 
     all_concerts = []
 
-    # Run Eventbrite scraper
+    # Run Mock scraper (always runs - no API key needed)
     logger.info("=" * 60)
-    logger.info("Running Eventbrite scraper...")
-    eventbrite = EventbriteScraper(location="Boston, MA")
-    eventbrite_concerts = eventbrite.scrape()
-    all_concerts.extend(eventbrite_concerts)
+    logger.info("Running Mock Data scraper...")
+    mock_scraper = MockDataScraper()
+    mock_concerts = mock_scraper.scrape()
+    all_concerts.extend(mock_concerts)
+
+    # Run Eventbrite scraper (only if API key is set)
+    if os.getenv("EVENTBRITE_API_KEY"):
+        logger.info("=" * 60)
+        logger.info("Running Eventbrite scraper...")
+        eventbrite = EventbriteScraper(location="Boston, MA")
+        eventbrite_concerts = eventbrite.scrape()
+        all_concerts.extend(eventbrite_concerts)
+    else:
+        logger.info("=" * 60)
+        logger.info("Skipping Eventbrite scraper (no API key set)")
+        logger.info("To use Eventbrite, set EVENTBRITE_API_KEY environment variable")
 
     # Add additional scrapers here as you implement them
     # Example:
@@ -53,11 +67,9 @@ def main():
         logger.info("=" * 60)
         logger.info("Saving results...")
 
-        # Use base scraper's save functionality
-        from scraper.base_scraper import BaseScraper
-        saver = BaseScraper.__new__(BaseScraper)
-        saver.concerts = child_friendly_concerts
-        saver.save_results()
+        # Save using a mock scraper instance
+        mock_scraper.concerts = child_friendly_concerts
+        mock_scraper.save_results()
 
         logger.info(f"Results saved to:")
         logger.info(f"  - {CONCERTS_JSON}")

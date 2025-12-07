@@ -9,7 +9,7 @@ from typing import Dict, List
 
 import pandas as pd
 
-from scraper.config import CONCERTS_CSV, CONCERTS_JSON
+from scraper import config
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -75,15 +75,15 @@ class BaseScraper(ABC):
         concerts_data = [concert.to_dict() for concert in self.concerts]
 
         # Save as JSON
-        Path(CONCERTS_JSON).parent.mkdir(parents=True, exist_ok=True)
-        with open(CONCERTS_JSON, "w") as f:
+        Path(config.CONCERTS_JSON).parent.mkdir(parents=True, exist_ok=True)
+        with open(config.CONCERTS_JSON, "w") as f:
             json.dump(concerts_data, f, indent=2)
-        logger.info(f"Saved {len(concerts_data)} concerts to {CONCERTS_JSON}")
+        logger.info(f"Saved {len(concerts_data)} concerts to {config.CONCERTS_JSON}")
 
         # Save as CSV
         df = pd.DataFrame(concerts_data)
-        df.to_csv(CONCERTS_CSV, index=False)
-        logger.info(f"Saved {len(concerts_data)} concerts to {CONCERTS_CSV}")
+        df.to_csv(config.CONCERTS_CSV, index=False)
+        logger.info(f"Saved {len(concerts_data)} concerts to {config.CONCERTS_CSV}")
 
     def filter_child_friendly(self, keywords: List[str]) -> List[Concert]:
         """Filter concerts for child-friendly events."""
