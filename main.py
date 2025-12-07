@@ -42,9 +42,9 @@ def main():
     # Use mock data if requested
     if args.use_mock:
         logger.info("=" * 60)
-        logger.info("Running Mock Data scraper...")
-        from scraper.mock_scraper import MockDataScraper
-        mock_scraper = MockDataScraper()
+        logger.info("Running Expanded Mock Data scraper...")
+        from scraper.expanded_mock_scraper import ExpandedMockScraper
+        mock_scraper = ExpandedMockScraper()
         mock_concerts = mock_scraper.scrape()
         all_concerts.extend(mock_concerts)
     else:
