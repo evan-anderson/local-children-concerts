@@ -59,19 +59,39 @@ This will create a virtual environment and install all required packages.
 
 ### Running the Scrapers
 
-Run the main scraper script:
+**Quick Start with Mock Data:**
 
 ```bash
-uv run python main.py
+uv run python main.py --use-mock
 ```
 
-This will:
-1. Generate mock concert data (no API key required)
-2. Optionally scrape from Eventbrite (if API key is set)
-3. Filter for child-friendly events
-4. Save results to `data/concerts.json` and `data/concerts.csv`
+This generates realistic sample data without scraping any websites.
 
-**Note**: The scraper works out of the box with mock data - no API keys needed to get started!
+**Scrape Real Websites:**
+
+```bash
+# Run all scrapers
+uv run python main.py
+
+# Run specific scrapers
+uv run python main.py --scrapers boston libraries timeout
+
+# Available scrapers:
+# - boston: Boston.gov events calendar
+# - libraries: Boston & Cambridge Public Library events
+# - timeout: Time Out Boston
+# - bostoncom: Boston.com
+# - bostoncentral: BostonCentral events
+# - eventbrite: Eventbrite API (requires API key)
+# - all: Run all scrapers (default)
+```
+
+The scraper will:
+1. Scrape concert data from selected sources
+2. Filter for child-friendly events
+3. Save results to `data/concerts.json` and `data/concerts.csv`
+
+**Important Note**: Web scrapers may need adjustment as websites change their HTML structure. The scrapers are templates that show the approach - you may need to inspect the actual HTML of each website and update the scraper code accordingly.
 
 ### Configuring Eventbrite Scraper
 
@@ -111,18 +131,42 @@ Edit [scraper/config.py](scraper/config.py) to customize:
 ## Data Sources
 
 ### Currently Implemented
-- **Mock Data**: Sample concert data for testing (no API key needed)
-- **Eventbrite**: Uses the Eventbrite API to search for family-friendly concerts (optional, requires API key)
 
-### Planned Sources
-The project is designed to be extensible. Additional scrapers can be implemented for:
-- City/town event calendars
-- Public library event pages
-- Community center websites
-- Venue websites (Symphony Hall, House of Blues, etc.)
-- Other ticketing platforms
+1. **Mock Data Scraper** ([scraper/mock_scraper.py](scraper/mock_scraper.py))
+   - Generates realistic sample concert data
+   - No API key or internet connection needed
+   - Perfect for testing and development
+   - Use with: `--use-mock`
 
-See [scraper/example_scraper.py](scraper/example_scraper.py) for a template to implement new scrapers.
+2. **Web Scrapers** (Internet-based, no API keys required)
+   - **Boston.gov Events** ([scraper/boston_events_scraper.py](scraper/boston_events_scraper.py))
+   - **Boston Public Library** ([scraper/library_events_scraper.py](scraper/library_events_scraper.py))
+   - **Cambridge Public Library** ([scraper/library_events_scraper.py](scraper/library_events_scraper.py))
+   - **Time Out Boston** ([scraper/web_search_scraper.py](scraper/web_search_scraper.py))
+   - **Boston.com** ([scraper/web_search_scraper.py](scraper/web_search_scraper.py))
+   - **BostonCentral** ([scraper/web_search_scraper.py](scraper/web_search_scraper.py))
+
+3. **API-Based Scrapers** (Require API keys)
+   - **Eventbrite** ([scraper/eventbrite_scraper.py](scraper/eventbrite_scraper.py)) - Requires `EVENTBRITE_API_KEY`
+
+### How Web Scraping Works
+
+The web scrapers use BeautifulSoup to parse HTML from public websites. Since websites frequently change their HTML structure, these scrapers serve as templates showing the approach. You may need to:
+
+1. Inspect the actual HTML of the website (use browser DevTools)
+2. Update the CSS selectors in the scraper code
+3. Adjust the data extraction logic based on the site's structure
+
+### Adding New Data Sources
+
+To add a new scraper:
+
+1. Create a new file in `scraper/` directory
+2. Extend `BaseScraper` class
+3. Implement the `scrape()` method
+4. Import and add to [main.py](main.py)
+
+Example template provided in [scraper/example_scraper.py](scraper/example_scraper.py)
 
 ## Development
 
