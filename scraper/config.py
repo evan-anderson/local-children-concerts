@@ -11,7 +11,8 @@ BOSTON_METRO_TOWNS = [
     "Boston",
 ]
 
-# Keywords to identify child-friendly concerts
+# Keywords to identify child-friendly concerts.
+# "young" alone is intentionally excluded — it matches "young adult".
 CHILD_FRIENDLY_KEYWORDS = [
     "kids",
     "children",
@@ -20,8 +21,13 @@ CHILD_FRIENDLY_KEYWORDS = [
     "toddler",
     "preschool",
     "elementary",
-    "young",
+    "young people",
     "all ages",
+    "sing along",
+    "sing-along",
+    "baby",
+    "infant",
+    "parent and child",
 ]
 
 # Output file paths
