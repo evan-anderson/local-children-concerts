@@ -21,6 +21,7 @@ class ExpandedMockScraper(BaseScraper):
 
     def scrape(self) -> List[Concert]:
         """Generate comprehensive mock dataset."""
+        random.seed(42)  # Deterministic: same data every run
         logger.info("Generating expanded mock concert dataset...")
 
         # Venues by town
@@ -96,8 +97,8 @@ class ExpandedMockScraper(BaseScraper):
             ("Indie Band Showcase", "Local indie music"),
         ]
 
-        # Generate events over past year
-        base_date = datetime.now() - timedelta(days=365)
+        # Generate events spanning 6 months ago through 6 months ahead
+        base_date = datetime.now() - timedelta(days=180)
 
         for day_offset in range(0, 365, 3):  # Event every 3 days = ~120 events
             current_date = base_date + timedelta(days=day_offset)

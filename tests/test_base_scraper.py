@@ -1,4 +1,4 @@
-"""Tests for the base scraper functionality."""
+"""Tests for the Concert model, BaseScraper, and pipeline functions."""
 
 import json
 from pathlib import Path
@@ -11,10 +11,9 @@ from scraper.config import CHILD_FRIENDLY_KEYWORDS
 
 
 class MockScraper(BaseScraper):
-    """Mock scraper for testing."""
+    """Minimal scraper for testing."""
 
     def scrape(self):
-        """Return mock concert data."""
         self.concerts = [
             Concert(
                 title="Kids Rock Concert",
@@ -102,11 +101,13 @@ def test_scraper_scrape():
 
 
 def test_filter_child_friendly():
-    """Test filtering for child-friendly concerts."""
+    """Test pipeline filtering for child-friendly concerts."""
+    from scraper.pipeline import filter_child_friendly
+
     scraper = MockScraper()
     scraper.scrape()
 
-    filtered = scraper.filter_child_friendly(CHILD_FRIENDLY_KEYWORDS)
+    filtered = filter_child_friendly(scraper.concerts)
 
     # Should find 2 child-friendly concerts (Kids Rock Concert and Family Sing-Along)
     assert len(filtered) == 2
@@ -116,15 +117,58 @@ def test_filter_child_friendly():
     assert "Adult Jazz Night" not in titles
 
 
+def test_deduplicate():
+    """Test that pipeline deduplication removes duplicates keyed on (title, venue, date)."""
+    from scraper.pipeline import deduplicate
+
+    concerts = [
+        Concert(title="Concert A", venue="Venue X", town="Boston", date="2024-12-15T14:00:00"),
+        Concert(title="Concert A", venue="Venue X", town="Boston", date="2024-12-15T14:00:00"),  # exact dup
+        Concert(title="Concert A", venue="Venue X", town="Boston", date="2024-12-16T14:00:00"),  # different date
+        Concert(title="Concert B", venue="Venue Y", town="Cambridge", date="2024-12-15T14:00:00"),
+    ]
+
+    result = deduplicate(concerts)
+
+    assert len(result) == 3
+    # First occurrence is kept
+    assert result[0].title == "Concert A"
+    assert result[0].date == "2024-12-15T14:00:00"
+    assert result[1].title == "Concert A"
+    assert result[1].date == "2024-12-16T14:00:00"
+    assert result[2].title == "Concert B"
+
+
+def test_deduplicate_case_insensitive():
+    """Deduplication key is case-insensitive on title and venue."""
+    from scraper.pipeline import deduplicate
+
+    concerts = [
+        Concert(title="Kids Concert", venue="Symphony Hall", town="Boston", date="2024-12-15T14:00:00"),
+        Concert(title="kids concert", venue="symphony hall", town="Boston", date="2024-12-15T14:00:00"),
+    ]
+
+    result = deduplicate(concerts)
+    assert len(result) == 1
+
+
+def test_detect_town():
+    """Test town detection from free text in web scraper."""
+    from scraper.web_search_scraper import _detect_town
+
+    assert _detect_town("Event at Sanders Theatre in Cambridge") == "Cambridge"
+    assert _detect_town("Show happening in Somerville tonight") == "Somerville"
+    assert _detect_town("Something in Newton center") == "Newton"
+    assert _detect_town("No town mentioned here") == "Boston"  # fallback
+
+
 def test_save_results(tmp_path):
     """Test saving concerts to JSON and CSV."""
-    # Create a temporary config for testing
     from scraper import config
 
     original_json = config.CONCERTS_JSON
     original_csv = config.CONCERTS_CSV
 
-    # Use temporary paths
     config.CONCERTS_JSON = str(tmp_path / "concerts.json")
     config.CONCERTS_CSV = str(tmp_path / "concerts.csv")
 
@@ -153,25 +197,26 @@ def test_save_results(tmp_path):
         assert "town" in df.columns
 
     finally:
-        # Restore original config
         config.CONCERTS_JSON = original_json
         config.CONCERTS_CSV = original_csv
 
 
 def test_empty_scraper_save(tmp_path, caplog):
-    """Test saving with no concerts."""
+    """Test saving with no concerts logs a warning."""
     from scraper import config
 
     original_json = config.CONCERTS_JSON
+    original_csv = config.CONCERTS_CSV
     config.CONCERTS_JSON = str(tmp_path / "concerts.json")
+    config.CONCERTS_CSV = str(tmp_path / "concerts.csv")
 
     try:
         scraper = MockScraper()
-        scraper.concerts = []  # Empty list
+        scraper.concerts = []
         scraper.save_results()
 
-        # Should log warning about no concerts
         assert "No concerts to save" in caplog.text
 
     finally:
         config.CONCERTS_JSON = original_json
+        config.CONCERTS_CSV = original_csv
