@@ -25,6 +25,7 @@ class ConcertResponse(BaseModel):
 class ConcertsListResponse(BaseModel):
     concerts: list[ConcertResponse]
     total: int
+    last_updated: Optional[str] = None
 
 
 @router.get("/concerts", response_model=ConcertsListResponse)
@@ -35,9 +36,12 @@ async def get_concerts(
 ) -> ConcertsListResponse:
     """Get filtered concerts."""
     concerts = get_filtered_concerts(towns, start_date, end_date)
+    # Get last_updated from first concert's scraped_at (all scraped together)
+    last_updated = concerts[0]["scraped_at"] if concerts else None
     return ConcertsListResponse(
         concerts=[ConcertResponse(**c) for c in concerts],
         total=len(concerts),
+        last_updated=last_updated,
     )
 
 

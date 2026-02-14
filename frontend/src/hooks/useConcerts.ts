@@ -3,6 +3,7 @@ import type { Concert, ConcertsResponse, ConcertFilters } from '../types/concert
 
 export function useConcerts(filters: ConcertFilters) {
   const [concerts, setConcerts] = useState<Concert[]>([]);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -24,13 +25,14 @@ export function useConcerts(filters: ConcertFilters) {
       })
       .then((data: ConcertsResponse) => {
         setConcerts(data.concerts);
+        setLastUpdated(data.last_updated);
         setError(null);
       })
       .catch(err => setError(err))
       .finally(() => setIsLoading(false));
   }, [townsKey, filters.startDate, filters.endDate]);
 
-  return { concerts, isLoading, error };
+  return { concerts, lastUpdated, isLoading, error };
 }
 
 export function useTowns() {

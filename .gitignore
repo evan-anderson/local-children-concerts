@@ -15,9 +15,7 @@ build/
 # uv
 .uv/
 
-# Data files
-data/*.json
-data/*.csv
+# Data directory (keep the directory tracked)
 !data/.gitkeep
 
 # IDE

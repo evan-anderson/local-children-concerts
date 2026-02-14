@@ -13,6 +13,7 @@ export interface Concert {
 export interface ConcertsResponse {
   concerts: Concert[];
   total: number;
+  last_updated: string | null;
 }
 
 export interface ConcertFilters {
