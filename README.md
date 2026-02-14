@@ -1,44 +1,51 @@
 # Boston Metro Child-Friendly Concerts
 
-A web application to visualize where child-friendly concerts most frequently occur in the Boston metropolitan area, including Waltham, Newton, Lexington, Arlington, Somerville, Cambridge, and Boston.
-
-## Project Overview
-
-This project scrapes concert data from various sources and generates a heat map showing the geographic distribution of child-friendly concerts across the Boston metro area.
+A web application to discover child-friendly concerts in the Boston metropolitan area, including Waltham, Newton, Lexington, Arlington, Somerville, Cambridge, and Boston.
 
 ## Features
 
+- **Web UI**: React-based interface with filtering by town and date range
+- **REST API**: FastAPI backend serving concert data
 - **Data Scraping**: Python-based scrapers to collect concert data from multiple sources
 - **Child-Friendly Filtering**: Automatically identifies concerts suitable for children based on keywords
-- **Geographic Focus**: Targets Boston metro towns (Waltham, Newton, Lexington, Arlington, Somerville, Cambridge, Boston)
-- **Data Export**: Outputs to both JSON and CSV formats for easy analysis
+- **Geographic Focus**: Targets Boston metro towns
+- **Data Export**: Outputs to both JSON and CSV formats
 
 ## Project Structure
 
 ```
 local-children-concerts/
+├── api/                        # FastAPI backend
+│   ├── main.py                 # App entry point with CORS
+│   ├── routes/concerts.py      # API endpoints
+│   └── services/concert_service.py  # Data loading and filtering
+├── frontend/                   # React + TypeScript + Vite
+│   ├── src/
+│   │   ├── components/         # UI components
+│   │   ├── hooks/              # Data fetching hooks
+│   │   └── types/              # TypeScript interfaces
+│   └── package.json
 ├── scraper/                    # Python scraping modules
-│   ├── __init__.py
-│   ├── base_scraper.py        # Base scraper class and Concert model
-│   ├── config.py              # Configuration (towns, keywords)
-│   ├── eventbrite_scraper.py  # Eventbrite API scraper
-│   └── example_scraper.py     # Template for additional scrapers
+│   ├── base_scraper.py         # Base scraper class and Concert model
+│   ├── config.py               # Configuration (towns, keywords)
+│   ├── pipeline.py             # Data processing pipeline
+│   ├── library_events_scraper.py   # Config-driven library scraper
+│   └── web_search_scraper.py   # Config-driven web scraper
 ├── data/                       # Output directory for scraped data
-│   ├── concerts.json          # Concert data in JSON format
-│   └── concerts.csv           # Concert data in CSV format
-├── main.py                     # Main script to run scrapers
-├── pyproject.toml             # Python dependencies (uv)
-└── README.md
+│   ├── concerts.json
+│   └── concerts.csv
+├── tests/                      # Test suite
+├── main.py                     # Scraper entry point
+└── pyproject.toml              # Python dependencies (uv)
 ```
 
 ## Setup
 
-This project uses [uv](https://github.com/astral-sh/uv) for fast, reliable Python dependency management.
-
 ### Prerequisites
 
 - Python 3.10+
-- uv package manager
+- [uv](https://github.com/astral-sh/uv) package manager
+- Node.js 18+ (for frontend)
 
 ### Installation
 
@@ -48,14 +55,39 @@ git clone <your-repo-url>
 cd local-children-concerts
 ```
 
-2. Install dependencies using uv:
+2. Install Python dependencies:
 ```bash
 uv sync
 ```
 
-This will create a virtual environment and install all required packages.
+3. Install frontend dependencies:
+```bash
+cd frontend && npm install
+```
 
 ## Usage
+
+### Running the Web UI
+
+Start both the API server and frontend dev server:
+
+```bash
+# Terminal 1: Start the API server
+uv run uvicorn api.main:app --reload --port 8000
+
+# Terminal 2: Start the frontend
+cd frontend && npm run dev
+```
+
+Open http://localhost:5173 to browse concerts with filtering.
+
+### API Endpoints
+
+- `GET /api/concerts` - List concerts with optional filters:
+  - `?towns=Boston&towns=Cambridge` - Filter by towns
+  - `?start_date=2025-06-01&end_date=2025-12-31` - Filter by date range
+- `GET /api/towns` - List available towns
+- `GET /api/health` - Health check
 
 ### Running the Scrapers
 
@@ -65,143 +97,70 @@ This will create a virtual environment and install all required packages.
 uv run python main.py --use-mock
 ```
 
-This generates realistic sample data without scraping any websites.
-
 **Scrape Real Websites:**
 
 ```bash
 # Run all scrapers
 uv run python main.py
 
-# Run specific scrapers
-uv run python main.py --scrapers boston libraries timeout
+# Run specific scraper groups
+uv run python main.py --scrapers boston libraries web
 
-# Available scrapers:
+# Available groups:
 # - boston: Boston.gov events calendar
 # - libraries: Boston & Cambridge Public Library events
-# - timeout: Time Out Boston
-# - bostoncom: Boston.com
-# - bostoncentral: BostonCentral events
+# - web: Time Out Boston, Boston.com, BostonCentral
 # - eventbrite: Eventbrite API (requires API key)
 # - all: Run all scrapers (default)
 ```
 
-The scraper will:
-1. Scrape concert data from selected sources
-2. Filter for child-friendly events
-3. Save results to `data/concerts.json` and `data/concerts.csv`
+### Running Tests
 
-**Important Note**: Web scrapers may need adjustment as websites change their HTML structure. The scrapers are templates that show the approach - you may need to inspect the actual HTML of each website and update the scraper code accordingly.
+```bash
+# Backend tests (Python)
+uv run pytest -v
+
+# Frontend tests (React)
+cd frontend && npm test
+
+# Backend with coverage
+uv run pytest -v --cov=scraper
+```
 
 ### Configuring Eventbrite Scraper
 
 The Eventbrite scraper requires an API key:
 
-1. Create an Eventbrite account at [eventbrite.com](https://www.eventbrite.com)
-2. Get an API key at [eventbrite.com/platform/api](https://www.eventbrite.com/platform/api)
-3. Set the environment variable:
 ```bash
 export EVENTBRITE_API_KEY='your_api_key_here'
 ```
 
-### Running Tests
+## Configuration
 
-Run the test suite to verify everything works:
-
-```bash
-uv run pytest
-```
-
-For verbose output with coverage:
-
-```bash
-uv run pytest -v --cov=scraper
-```
-
-All tests should pass without requiring any API keys.
-
-### Configuration
-
-Edit [scraper/config.py](scraper/config.py) to customize:
-
-- **Towns**: Add or remove Boston metro towns to search
-- **Keywords**: Modify keywords used to identify child-friendly concerts
+Edit `scraper/config.py` to customize:
+- **Towns**: Add or remove Boston metro towns
+- **Keywords**: Modify child-friendly detection keywords
 - **Output paths**: Change where data files are saved
 
-## Data Sources
+To add new data sources, edit the config dicts in `main.py`:
 
-### Currently Implemented
-
-1. **Mock Data Scraper** ([scraper/mock_scraper.py](scraper/mock_scraper.py))
-   - Generates realistic sample concert data
-   - No API key or internet connection needed
-   - Perfect for testing and development
-   - Use with: `--use-mock`
-
-2. **Web Scrapers** (Internet-based, no API keys required)
-   - **Boston.gov Events** ([scraper/boston_events_scraper.py](scraper/boston_events_scraper.py))
-   - **Boston Public Library** ([scraper/library_events_scraper.py](scraper/library_events_scraper.py))
-   - **Cambridge Public Library** ([scraper/library_events_scraper.py](scraper/library_events_scraper.py))
-   - **Time Out Boston** ([scraper/web_search_scraper.py](scraper/web_search_scraper.py))
-   - **Boston.com** ([scraper/web_search_scraper.py](scraper/web_search_scraper.py))
-   - **BostonCentral** ([scraper/web_search_scraper.py](scraper/web_search_scraper.py))
-
-3. **API-Based Scrapers** (Require API keys)
-   - **Eventbrite** ([scraper/eventbrite_scraper.py](scraper/eventbrite_scraper.py)) - Requires `EVENTBRITE_API_KEY`
-
-### How Web Scraping Works
-
-The web scrapers use BeautifulSoup to parse HTML from public websites. Since websites frequently change their HTML structure, these scrapers serve as templates showing the approach. You may need to:
-
-1. Inspect the actual HTML of the website (use browser DevTools)
-2. Update the CSS selectors in the scraper code
-3. Adjust the data extraction logic based on the site's structure
-
-### Adding New Data Sources
-
-To add a new scraper:
-
-1. Create a new file in `scraper/` directory
-2. Extend `BaseScraper` class
-3. Implement the `scrape()` method
-4. Import and add to [main.py](main.py)
-
-Example template provided in [scraper/example_scraper.py](scraper/example_scraper.py)
-
-## Development
-
-### Adding a New Scraper
-
-1. Create a new file in the `scraper/` directory
-2. Extend the `BaseScraper` class
-3. Implement the `scrape()` method
-4. Import and use in [main.py](main.py)
-
-Example:
 ```python
-from scraper.base_scraper import BaseScraper, Concert
+# Add a library source
+LIBRARY_SOURCES.append({
+    "name": "Brookline Public Library",
+    "base_url": "https://www.brooklinelibrary.org",
+    "events_path": "/events/",
+    "town": "Brookline",
+})
 
-class MyCustomScraper(BaseScraper):
-    def scrape(self):
-        # Your scraping logic here
-        concert = Concert(
-            title="Example Concert",
-            venue="Example Venue",
-            town="Boston",
-            date="2024-12-31",
-            source="MySource"
-        )
-        self.concerts.append(concert)
-        return self.concerts
+# Add a web source
+WEB_SOURCES.append({
+    "name": "Boston Magazine",
+    "base_url": "https://www.bostonmagazine.com",
+    "endpoints": ["/events/"],
+    "per_page_limit": 20,
+})
 ```
-
-### Child-Friendly Keywords
-
-Events are identified as child-friendly if their title or description contains keywords like:
-- kids, children, family
-- youth, toddler, preschool
-- elementary, young
-- all ages
 
 ## Output Data Format
 
@@ -209,43 +168,27 @@ Events are identified as child-friendly if their title or description contains k
 ```json
 [
   {
-    "title": "Concert Title",
-    "venue": "Venue Name",
+    "title": "Kids Rock Concert",
+    "venue": "Symphony Hall",
     "town": "Boston",
-    "date": "2024-12-31T19:00:00",
+    "date": "2025-06-15T14:00:00",
     "url": "https://example.com/event",
-    "description": "Event description",
-    "address": "123 Main St, Boston, MA",
-    "source": "Eventbrite",
-    "scraped_at": "2024-12-06T19:57:00"
+    "description": "A fun concert for the whole family",
+    "address": "301 Massachusetts Ave, Boston, MA",
+    "source": "BostonEvents",
+    "scraped_at": "2025-01-15T10:30:00"
   }
 ]
 ```
-
-### CSV Format
-Contains the same fields in a comma-separated format suitable for analysis in spreadsheet applications.
-
-## Future Enhancements
-
-- [ ] Web-based heat map visualization
-- [ ] Interactive filtering by date range and town
-- [ ] Additional data sources (libraries, community centers, venues)
-- [ ] Geocoding addresses for precise map coordinates
-- [ ] Automated scheduling to update data regularly
-- [ ] Frontend web application for browsing events
 
 ## Contributing
 
 Contributions are welcome! Areas where help is needed:
 - Implementing scrapers for additional data sources
 - Improving child-friendly keyword detection
-- Building the heat map visualization
-- Adding geocoding capabilities
+- Adding geocoding and map visualization
+- Enhancing the web UI
 
 ## License
 
 MIT License - feel free to use and modify for your own projects.
-
-## Contact
-
-For questions or suggestions, please open an issue on GitHub.
