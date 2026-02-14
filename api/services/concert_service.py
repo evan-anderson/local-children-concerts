@@ -1,15 +1,13 @@
 """Service layer for loading and filtering concert data."""
 
 import json
-from functools import lru_cache
 from pathlib import Path
 
 DATA_PATH = Path(__file__).parent.parent.parent / "data" / "concerts.json"
 
 
-@lru_cache(maxsize=1)
 def load_concerts() -> list[dict]:
-    """Load concerts from JSON file. Cached in memory."""
+    """Load concerts from JSON file."""
     if not DATA_PATH.exists():
         return []
     with open(DATA_PATH) as f:

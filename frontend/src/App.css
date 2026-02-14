@@ -35,6 +35,13 @@ header p {
   font-weight: 500;
 }
 
+header .last-updated {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+  font-weight: 400;
+}
+
 .filters {
   display: flex;
   flex-wrap: wrap;
